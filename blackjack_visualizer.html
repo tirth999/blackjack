@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lab 6 Blackjack Visualizer</title>
+<style>
+:root{--bg:#f4f7f5;--card:#fff;--ink:#1d2b24;--mute:#5d6f66;--line:#d5dfd9;--felt:#1b5e20;--blue:#0d47a1;--org:#e65100;--ok:#2e7d32;--okbg:#e8f5e9;--bad:#c62828;--badbg:#ffebee;--term:#14201a;--termink:#b9f6ca;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1713;--card:#18231d;--ink:#e6f0ea;--mute:#9bb0a5;--line:#2c3d34;--felt:#66bb6a;--blue:#64b5f6;--org:#ffb74d;--ok:#81c784;--okbg:#1b3324;--bad:#ef9a9a;--badbg:#3a1f22;--term:#0a110d}}
+:root[data-theme="dark"]{--bg:#0f1713;--card:#18231d;--ink:#e6f0ea;--mute:#9bb0a5;--line:#2c3d34;--felt:#66bb6a;--blue:#64b5f6;--org:#ffb74d;--ok:#81c784;--okbg:#1b3324;--bad:#ef9a9a;--badbg:#3a1f22;--term:#0a110d}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:860px;margin:0 auto;padding:18px 14px 40px}
+h1{margin:0;font-size:24px;color:var(--blue)}.sub{color:var(--mute);margin:2px 0 14px}
+.box{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px}
+h2{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--felt);margin:0 0 10px}
+.cmd{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:var(--term);color:var(--termink);border-radius:10px;padding:12px;font-family:ui-monospace,Menlo,Consolas,monospace}
+.cmd input{width:92px;font:inherit;padding:6px 8px;border-radius:6px;border:1px solid #3b5a48;background:#0b1510;color:#ffe082;text-align:center}
+.cmd button{font:inherit;font-weight:700;padding:7px 16px;border:0;border-radius:6px;background:var(--org);color:#fff;cursor:pointer}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chip{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:4px 11px;font-size:12.5px;cursor:pointer}
+.chip:hover{border-color:var(--blue)}
+.hand{display:flex;gap:12px;flex-wrap:wrap;min-height:112px;align-items:center}
+.pc{width:76px;height:106px;border-radius:9px;background:#fff;color:#111;border:2px solid #222;position:relative;display:grid;place-items:center;font-weight:700;box-shadow:0 2px 6px #0003;animation:pop .35s both}
+.pc.red{color:#c62828}.pc .r{position:absolute;top:5px;left:7px;font-size:17px}.pc .s{font-size:34px}
+.pc.bad{border:2px dashed var(--bad);background:var(--badbg);color:var(--bad)}.pc.bad .s{font-size:30px}
+.pc small{position:absolute;bottom:4px;font-size:10px;font-weight:600;max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@keyframes pop{from{transform:translateY(10px) scale(.9);opacity:0}}
+.step{display:grid;grid-template-columns:30px 1fr;gap:10px;padding:9px 0;border-top:1px solid var(--line);animation:fade .4s both}
+.step:first-of-type{border-top:0}
+@keyframes fade{from{opacity:0;transform:translateX(-6px)}}
+.dot{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;font-size:13px;background:var(--mute)}
+.pass .dot{background:var(--ok)}.fail .dot{background:var(--bad)}.skip{opacity:.45}
+.fn{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;color:var(--blue);word-break:break-word}
+.st b{display:block}.det{color:var(--mute);font-size:13.5px}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px}
+th,td{padding:5px 8px;border:1px solid var(--line);text-align:center}th{background:var(--okbg);color:var(--ok)}
+.y{color:var(--ok);font-weight:700}.n{color:var(--bad);font-weight:700}
+.meter{position:relative;height:26px;border-radius:6px;overflow:hidden;display:flex;margin-top:10px;border:1px solid var(--line)}
+.meter i{display:block;height:100%}.meter .safe{background:var(--okbg);width:70%}.meter .bust{background:var(--badbg);width:30%}
+.mark{position:absolute;top:-2px;bottom:-2px;width:3px;background:var(--org);transition:left .6s}
+.scale{display:flex;justify-content:space-between;font-size:11px;color:var(--mute);margin-top:2px}
+.term{background:var(--term);color:var(--termink);border-radius:10px;padding:12px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13.5px;white-space:pre-wrap;word-break:break-word;min-height:64px}
+.term .e{color:#ff8a80}.term .rc{color:#90a4ae}
+.legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.legend div{border-left:4px solid var(--blue);padding-left:9px}.legend b{display:block}.legend code{font-size:12.5px;color:var(--org)}
+</style>
+</head>
+<body>
+<main>
+<h1>♠ Blackjack Hand Scorer</h1>
+<p class="sub">CPSC 120L Lab 6 visualizer — type cards like command-line arguments and watch <code>playHand</code> check and score them.</p>
+
+<div class="box">
+  <h2>1 · Run the program</h2>
+  <div class="cmd"><span>$ ./project</span>
+    <input id="a1" value="A" aria-label="card 1" autocomplete="off" spellcheck="false">
+    <input id="a2" value="7" aria-label="card 2" autocomplete="off" spellcheck="false">
+    <input id="a3" value="" placeholder="(extra)" aria-label="extra argument" autocomplete="off" spellcheck="false">
+    <button id="go">Run ▶</button></div>
+  <div class="chips" id="presets"></div>
+</div>
+
+<div class="box"><h2>2 · The cards you typed</h2><div class="hand" id="hand"></div></div>
+<div class="box"><h2>3 · What the code does, step by step</h2><div id="steps"></div></div>
+<div class="box"><h2>4 · Helper functions on each card</h2><div id="fns"></div></div>
+<div class="box"><h2>5 · Hand score vs. bust line (21)</h2>
+  <div class="meter"><i class="safe"></i><i class="bust"></i><div class="mark" id="mark" style="left:0"></div></div>
+  <div class="scale"><span>0</span><span>7</span><span>14</span><span>21</span><span>30</span></div></div>
+<div class="box"><h2>6 · Program output</h2><div class="term" id="out"></div></div>
+
+<div class="box"><h2>Valid card spellings (exact, case-sensitive)</h2>
+  <div class="legend">
+    <div><b>Ace → 1 point (+10 bonus if safe)</b><code>ace  a  A  one  1</code></div>
+    <div style="border-color:var(--felt)"><b>Face card → 10 points</b><code>king k K · queen q Q · jack j J</code></div>
+    <div style="border-color:var(--org)"><b>Number card → its value</b><code>2 3 4 5 6 7 8 9 10</code></div>
+  </div></div>
+</main>
+<script>
+const ACE=["ace","a","A","one","1"],FACE=["king","k","K","queen","q","Q","jack","j","J"],NUM=["2","3","4","5","6","7","8","9","10"];
+const isAce=c=>ACE.includes(c),isFace=c=>FACE.includes(c),isNum=c=>NUM.includes(c);
+const isCardName=c=>isAce(c)||isFace(c)||isNum(c);
+const cardPoints=c=>isAce(c)?1:isFace(c)?10:isNum(c)?parseInt(c,10):0;
+const isBust=s=>s>21, BONUS=10;
+const q=s=>JSON.stringify(s);
+const $=id=>document.getElementById(id);
+const presets=[["A","7","18 · sample run"],["K","A","21 · blackjack"],["A","A","12 · bonus once"],["9","5","14"],["1","9","20 · 1 is an ace"],["Ace","7","bad: capital Ace"],["A","Seven","bad: card 2"],["Joker","5","bad: card 1"],["A","","","only one card"],["A","7","K","three cards"]];
+presets.forEach(p=>{const b=document.createElement("button");b.className="chip";
+  const three=p.length===4;const lab=three?p[3]:p[2];
+  b.textContent=(p[0]+" "+p[1]+(three?" "+p[2]:"")).trim()+"  →  "+lab;
+  b.onclick=()=>{$("a1").value=p[0];$("a2").value=p[1];$("a3").value=three?p[2]:"";run()};$("presets").appendChild(b)});
+function cardEl(c){const d=document.createElement("div");
+  if(!isCardName(c)){d.className="pc bad";d.innerHTML='<span class="s">?</span><small>'+esc(c)+'</small>';return d}
+  const r=isAce(c)?"A":isFace(c)?c[0].toUpperCase():c;
+  const suit=["♠","♥","♦","♣"][(c.charCodeAt(0)+c.length)%4];
+  d.className="pc"+(suit==="♥"||suit==="♦"?" red":"");
+  d.innerHTML='<span class="r">'+r+'</span><span class="s">'+suit+'</span><small>'+esc(c)+'</small>';return d}
+function esc(s){return s.replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]))}
+function run(){
+  const args=[$("a1").value,$("a2").value,$("a3").value].filter(x=>x!=="");
+  const hand=$("hand");hand.innerHTML="";
+  if(!args.length)hand.innerHTML='<span class="det">No cards typed.</span>';
+  args.forEach((c,i)=>{const e=cardEl(c);e.style.animationDelay=i*.12+"s";hand.appendChild(e)});
+  const steps=[];let out="",rc=0,score=null,stop=false;
+  const add=(fn,title,det,ok)=>steps.push({fn,title,det,st:stop?"skip":ok?"pass":"fail"});
+  const ok1=args.length===2;
+  add("card_names.size() == 2","Exactly two cards?",ok1?"You gave 2 cards — good.":"You gave "+args.length+". Print an error containing “error” and “two cards”, then return non-zero.",ok1);
+  if(!ok1){out="Error: you must supply two cards";rc=1;stop=true}
+  let c1=args[0],c2=args[1];
+  const v1=!stop&&isCardName(c1);
+  add("isCardName(card_1)","Is card 1 real?",stop?"Not reached.":v1?q(c1)+" is a valid card.":q(c1)+" is not a valid spelling — error shows the name in quotes.",v1);
+  if(!stop&&!v1){out="Error: "+q(c1)+" is an invalid card name";rc=2;stop=true}
+  const v2=!stop&&isCardName(c2);
+  add("isCardName(card_2)","Is card 2 real?",stop?"Not reached.":v2?q(c2)+" is a valid card.":q(c2)+" is not a valid spelling — error shows the name in quotes.",v2);
+  if(!stop&&!v2){out="Error: "+q(c2)+" is an invalid card name";rc=3;stop=true}
+  let p1=0,p2=0,total=0,hasAce=false,bonus=false,test=0;
+  if(!stop){p1=cardPoints(c1);p2=cardPoints(c2);total=p1+p2;hasAce=isAce(c1)||isAce(c2);test=total+BONUS;bonus=hasAce&&!isBust(test);score=bonus?test:total}
+  add("cardPoints(card_1) + cardPoints(card_2)","Add the card points",stop?"Not reached.":p1+" + "+p2+" = "+total,true);
+  add("isAce(card_1) || isAce(card_2)","Is there an ace?",stop?"Not reached.":hasAce?"Yes — an ace is in the hand.":"No ace, so no bonus.",hasAce);
+  add("!isBust(total + ACE_BONUS)","Would the +10 bonus stay ≤ 21?",stop?"Not reached.":hasAce?total+" + "+BONUS+" = "+test+(isBust(test)?" → bust, skip bonus":" → safe, add it (only once)"):"Skipped — no ace.",!stop&&hasAce&&!isBust(test));
+  if(!stop)out="Your hand containing a "+q(c1)+" and a "+q(c2)+" has a score of "+score+" points";
+  add("std::println(...)","Print the result",stop?"Not reached.":"Final score = "+score+(bonus?" (ace bonus used)":""),true);
+  // steps UI (steps 5-6 greyed if no ace)
+  const box=$("steps");box.innerHTML="";
+  steps.forEach((s,i)=>{const el=document.createElement("div");
+    let cls=s.st;if(!stop&&i===4&&!hasAce)cls="skip";
+    el.className="step "+cls;el.style.animationDelay=i*.18+"s";
+    el.innerHTML='<div class="dot">'+(cls==="pass"?"✓":cls==="fail"?"✗":i+1)+'</div><div class="st"><b>'+s.title+'</b><span class="fn">'+esc(s.fn)+'</span><div class="det">'+esc(s.det)+'</div></div>';box.appendChild(el)});
+  // function table
+  const f=$("fns");
+  if(!args.length){f.innerHTML='<span class="det">Nothing to test.</span>'}else{
+    let h='<table><tr><th>card</th><th>isAce</th><th>isFaceCard</th><th>isNumberCard</th><th>isCardName</th><th>cardPoints</th></tr>';
+    args.slice(0,3).forEach(c=>{const yn=b=>'<td class="'+(b?"y":"n")+'">'+(b?"true":"false")+"</td>";
+      h+="<tr><td><b>"+esc(q(c))+"</b></td>"+yn(isAce(c))+yn(isFace(c))+yn(isNum(c))+yn(isCardName(c))+"<td>"+(isCardName(c)?cardPoints(c):"—")+"</td></tr>"});
+    f.innerHTML=h+"</table>"}
+  $("mark").style.left=score===null?"0%":Math.min(score,30)/30*100+"%";
+  $("out").innerHTML=(rc?'<span class="e">'+esc(out)+"</span>":esc(out))+'\n<span class="rc">[exit code '+rc+(rc?" — non-zero = problem":" — success")+"]</span>"}
+$("go").onclick=run;["a1","a2","a3"].forEach(i=>$(i).addEventListener("keydown",e=>{if(e.key==="Enter")run()}));
+run();
+</script>
+</body>
+</html>
